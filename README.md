@@ -1,5 +1,15 @@
 # Elevation of Privilege
 
+## Fork Notice
+
+This repository is a fork of the original project at [TNG/elevation-of-privilege](https://github.com/TNG/elevation-of-privilege).
+
+In addition to the upstream functionality, this fork currently includes the following changes:
+
+- improved compatibility with newer OWASP Threat Dragon exports, including support for Thread Dragon / Threat Dragon v2.6 style JSON models
+- fixes for Threat Dragon diagram interaction issues in the game UI, including reliable component selection, improved behavior with Apple Magic Mouse, and removal of browser warnings caused by non-passive diagram event listeners on desktop
+- improved Markdown threat exports so downloaded reports include the originating Threat Dragon diagram and selected component for each exported threat
+
 [![Tests](https://github.com/tng/elevation-of-privilege/actions/workflows/checks.yml/badge.svg)](https://github.com/tng/elevation-of-privilege/actions/workflows/checks.yml)
 
 **Improve both: your application's security and your developer's awareness!**
