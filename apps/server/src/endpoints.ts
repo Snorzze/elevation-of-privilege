@@ -346,11 +346,15 @@ export const downloadThreatsMarkdownFile =
   };
 
 type ThreatWithCategory = ThreatDragonThreat & { category?: string };
+type ThreatWithContext = ThreatWithCategory & {
+  component?: string;
+  diagram?: string;
+};
 
 function enrichThreatWithCategory(
   threat: ThreatDragonThreat,
   gameMode: GameMode,
-): ThreatWithCategory {
+): ThreatWithContext {
   if (threat.type) {
     return {
       ...threat,
@@ -368,16 +372,25 @@ function getThreats(
   metadata: Server.MatchData,
   model: ThreatDragonModel | null,
 ) {
-  const threats: ThreatDragonThreat[] = [];
+  const threats: ThreatWithContext[] = [];
 
   //add threats from G.identifiedThreats
-  gameState.G.identifiedThreats.forEach((identifiedThreats) => {
+  gameState.G.identifiedThreats.forEach((identifiedThreats, diagramIndex) => {
     if (identifiedThreats !== null) {
+      const diagram = model?.detail.diagrams[diagramIndex];
       Object.keys(identifiedThreats).forEach((componentId) => {
+        const component = getThreatDragonCells(diagram).find(
+          (candidate) => candidate.id === componentId,
+        );
+        const componentName = getComponentDisplayName(component);
+        const diagramTitle = getDiagramDisplayName(diagram?.title);
+
         if (identifiedThreats[componentId] !== undefined) {
           Object.values(identifiedThreats[componentId]).forEach((threat) => {
             threats.push({
               ...threat,
+              component: componentName,
+              diagram: diagramTitle,
               owner:
                 threat.owner !== undefined
                   ? metadata.players[Number.parseInt(threat.owner)]?.name
@@ -400,7 +413,16 @@ function getThreats(
     model.detail.diagrams.forEach((diagram) => {
       getThreatDragonCells(diagram).forEach((cell) => {
         if (cell.threats !== undefined) {
-          threats.push(...cell.threats);
+          const componentName = getComponentDisplayName(cell);
+          const diagramTitle = getDiagramDisplayName(diagram.title);
+
+          threats.push(
+            ...cell.threats.map((threat) => ({
+              ...threat,
+              component: componentName,
+              diagram: diagramTitle,
+            })),
+          );
         }
       });
     });
@@ -409,7 +431,7 @@ function getThreats(
   return threats;
 }
 
-function formatThreats(threats: ThreatWithCategory[], date: string) {
+function formatThreats(threats: ThreatWithContext[], date: string) {
   return `Threats ${date}
 =======
 
@@ -417,12 +439,20 @@ ${threats.map(formatSingleThreat).join('\n')}
 `;
 }
 
-function formatSingleThreat(threat: ThreatWithCategory, index: number) {
+function formatSingleThreat(threat: ThreatWithContext, index: number) {
   const lines = [
     `${index + 1}. **${escapeMarkdownText(
       threat.title?.trim() ?? 'No title given',
     )}**`,
   ];
+
+  if ('diagram' in threat && threat.diagram !== undefined) {
+    lines.push(`    - *Diagram:* ${escapeMarkdownText(threat.diagram)}`);
+  }
+
+  if ('component' in threat && threat.component !== undefined) {
+    lines.push(`    - *Component:* ${escapeMarkdownText(threat.component)}`);
+  }
 
   if ('category' in threat && threat.category !== undefined) {
     lines.push(`    - *Category:* ${escapeMarkdownText(threat.category)}`);
@@ -457,4 +487,26 @@ function formatSingleThreat(threat: ThreatWithCategory, index: number) {
   }
 
   return lines.join('\n');
+}
+
+function getDiagramDisplayName(title: string | undefined): string | undefined {
+  const value = title?.trim();
+  return value ? value : undefined;
+}
+
+function getComponentDisplayName(
+  component:
+    | ReturnType<typeof getThreatDragonCells>[number]
+    | undefined,
+): string | undefined {
+  if (!component) {
+    return undefined;
+  }
+
+  const type = component.type.replace(/^tm\./, '');
+  const flowLabel = component.labels?.[0]?.attrs.text.text?.trim();
+  const textLabel = component.attrs.text?.text?.trim();
+  const label = component.type === 'tm.Flow' ? flowLabel : textLabel;
+
+  return label ? `${type}: ${label}` : undefined;
 }

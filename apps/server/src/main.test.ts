@@ -411,8 +411,12 @@ it('Download threat file', async () => {
                 ],
                 hasOpenThreats: true,
                 angle: 0,
-                attrs: {},
-                id: '',
+                attrs: {
+                  text: {
+                    text: 'External User',
+                  },
+                },
+                id: 'component-1',
                 position: { x: 0, y: 0 },
                 size: { height: 0, width: 0 },
                 type: 'tm.Actor',
@@ -443,8 +447,12 @@ it('Download threat file', async () => {
                 ],
                 hasOpenThreats: true,
                 angle: 0,
-                attrs: {},
-                id: '',
+                attrs: {
+                  text: {
+                    text: 'Payments Database',
+                  },
+                },
+                id: 'component-2',
                 position: { x: 0, y: 0 },
                 size: { height: 0, width: 0 },
                 type: 'tm.Actor',
@@ -466,8 +474,12 @@ it('Download threat file', async () => {
                 ],
                 hasOpenThreats: false,
                 angle: 0,
-                attrs: {},
-                id: '',
+                attrs: {
+                  text: {
+                    text: 'Web Application Config',
+                  },
+                },
+                id: 'component-3',
                 position: { x: 0, y: 0 },
                 size: { height: 0, width: 0 },
                 type: 'tm.Actor',
@@ -476,8 +488,12 @@ it('Download threat file', async () => {
               {
                 hasOpenThreats: false,
                 angle: 0,
-                attrs: {},
-                id: '',
+                attrs: {
+                  text: {
+                    text: 'Background Worker',
+                  },
+                },
+                id: 'component-4',
                 position: { x: 0, y: 0 },
                 size: { height: 0, width: 0 },
                 type: 'tm.Actor',
@@ -486,8 +502,12 @@ it('Download threat file', async () => {
               {
                 hasOpenThreats: true,
                 angle: 0,
-                attrs: {},
-                id: '',
+                attrs: {
+                  text: {
+                    text: 'Message Queue',
+                  },
+                },
+                id: 'component-5',
                 position: { x: 0, y: 0 },
                 size: { height: 0, width: 0 },
                 type: 'tm.Actor',
@@ -498,7 +518,7 @@ it('Download threat file', async () => {
           diagramType: 'STRIDE',
           size: { width: 0, height: 0 },
           thumbnail: '',
-          title: '',
+          title: 'Main Diagram',
         },
       ],
     },
@@ -536,40 +556,54 @@ it('Download threat file', async () => {
 =======
 
 1. **title**
+    - *Diagram:* Main Diagram
+    - *Component:* Actor: External User
     - *Category:* Spoofing
     - *Severity:* High
     - *Author:* Player 1
     - *Description:* &lt;img src="" onerror="alert\\('XSS'\\) alt="Uh oh..."&gt;
     - *Mitigation:* mitigation
 2. **title**
+    - *Diagram:* Main Diagram
+    - *Component:* Actor: Payments Database
     - *Category:* Spoofing
     - *Severity:* High
     - *Author:* Player 1
     - *Description:* description
     - *Mitigation:* mitigation
 3. **title**
+    - *Diagram:* Main Diagram
+    - *Component:* Actor: Web Application Config
     - *Category:* Spoofing
     - *Severity:* High
     - *Author:* Player 1
     - *Description:* description
     - *Mitigation:* mitigation
 4. **Accessing DB credentials**
+    - *Diagram:* Main Diagram
+    - *Component:* Actor: External User
     - *Category:* Information disclosure
     - *Severity:* High
     - *Description:* The Background Worker configuration stores the credentials used by the worker to access the DB. An attacker could compromise the Background Worker and get access to the DB credentials.
     - *Mitigation:* \\[Click Me\\]\\(javascript:alert\\('XSS'\\)\\)
 5. **Unauthorised access**
+    - *Diagram:* Main Diagram
+    - *Component:* Actor: Payments Database
     - *Category:* Information disclosure
     - *Severity:* High
     - *Description:* An attacker could make an query call on the DB,
     - *Mitigation:* Require all queries to be authenticated.
 6. **Credential theft**
+    - *Diagram:* Main Diagram
+    - *Component:* Actor: Payments Database
     - *Category:* Information disclosure
     - *Severity:* Medium
     - *Author:* The Model
     - *Description:* An attacker could obtain the DB credentials ans use them to make unauthorised queries.
     - *Mitigation:* Use a firewall to restrict access to the DB to only the Background Worker IP address.
 7. **\\!\\[Uh oh...\\]\\(https://www.example.com/image.png"onload="alert\\('XSS'\\)\\)**
+    - *Diagram:* Main Diagram
+    - *Component:* Actor: Web Application Config
     - *Category:* Information disclosure
     - *Severity:* High
     - *Description:* The Web Application Config stores credentials used  by the Web App to access the message queue. These could be stolen by an attacker and used to read confidential data or place poison message on the queue.
