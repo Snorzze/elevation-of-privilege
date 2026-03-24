@@ -6,11 +6,13 @@ import {
   GameMode,
   gameName,
   GameState,
+  getThreatDragonCells,
   getImageExtension,
   getSuitDisplayName,
   isSuit,
   logEvent,
   ModelType,
+  setThreatDragonCellThreats,
   SetupData,
   SUITS,
   ThreatDragonModel,
@@ -250,8 +252,10 @@ export const downloadThreatDragonModel =
         return;
       }
       Object.keys(threatsForComponent).forEach((componentIdx) => {
-        const diagram = model.detail.diagrams[diagramIdx]?.diagramJson;
-        const cell = diagram?.cells?.find((c) => c.id === componentIdx);
+        const diagram = model.detail.diagrams[diagramIdx];
+        const cell = getThreatDragonCells(diagram).find(
+          (candidate) => candidate.id === componentIdx,
+        );
 
         if (
           cell !== undefined &&
@@ -276,7 +280,7 @@ export const downloadThreatDragonModel =
               game: matchID,
             }),
           );
-          cell.threats = threats;
+          setThreatDragonCellThreats(diagram, componentIdx, threats);
         }
       });
     });
@@ -394,7 +398,7 @@ function getThreats(
   //add threats from model
   if (model) {
     model.detail.diagrams.forEach((diagram) => {
-      diagram.diagramJson.cells?.forEach((cell) => {
+      getThreatDragonCells(diagram).forEach((cell) => {
         if (cell.threats !== undefined) {
           threats.push(...cell.threats);
         }

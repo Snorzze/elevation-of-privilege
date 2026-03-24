@@ -8,13 +8,15 @@ import {
   getComponentName,
   getDealtCard,
   getPlayers,
+  getThreatDragonDiagramJson,
   getValidMoves,
   grammarJoin,
   resolvePlayerName,
   resolvePlayerNames,
+  setThreatDragonCellThreats,
 } from './utils';
 
-import type { GameState } from '../game/gameState';
+import type { GameState, ThreatDragonModel } from '../index';
 
 const baseG: GameState = {
   dealt: [],
@@ -136,6 +138,127 @@ it('makes correct component name', () => {
       z: 0,
     }),
   ).toBe('Flow: Bar');
+});
+
+it('normalizes Threat Dragon v2.6 diagrams to classic diagramJson cells', () => {
+  const model: ThreatDragonModel = {
+    version: '2.6.1-RC1',
+    summary: {
+      title: 'Foo',
+    },
+    detail: {
+      diagrams: [
+        {
+          id: 0,
+          title: 'Diagram',
+          thumbnail: '',
+          diagramType: 'STRIDE',
+          cells: [
+            {
+              id: 'actor-1',
+              shape: 'actor',
+              position: { x: 1, y: 2 },
+              size: { width: 120, height: 60 },
+              zIndex: 2,
+              data: {
+                type: 'tm.Actor',
+                name: 'User',
+                hasOpenThreats: true,
+                threats: [],
+              },
+            },
+            {
+              id: 'flow-1',
+              shape: 'flow',
+              zIndex: 3,
+              connector: 'smooth',
+              labels: ['Data Flow'],
+              source: {
+                cell: 'actor-1',
+                port: 'port-1',
+              },
+              target: {
+                x: 10,
+                y: 20,
+              },
+              data: {
+                type: 'tm.Flow',
+                name: 'Data Flow',
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  const diagramJson = getThreatDragonDiagramJson(model.detail.diagrams[0]);
+  const [actor, flow] = diagramJson.cells ?? [];
+
+  expect(actor?.type).toBe('tm.Actor');
+  expect(actor?.attrs.text?.text).toBe('User');
+  expect(actor?.attrs['.element-shape']).toStrictEqual({
+    class: 'element-shape hasOpenThreats isInScope',
+  });
+  expect(flow?.type).toBe('tm.Flow');
+  expect(flow?.labels?.[0]?.attrs.text.text).toBe('Data Flow');
+  expect(flow?.source).toStrictEqual({
+    id: 'actor-1',
+    port: 'port-1',
+    x: undefined,
+    y: undefined,
+  });
+});
+
+it('syncs imported cell threats when updating normalized diagrams', () => {
+  const model: ThreatDragonModel = {
+    summary: {
+      title: 'Foo',
+    },
+    detail: {
+      diagrams: [
+        {
+          id: 0,
+          title: 'Diagram',
+          thumbnail: '',
+          diagramType: 'STRIDE',
+          cells: [
+            {
+              id: 'actor-1',
+              shape: 'actor',
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              data: {
+                type: 'tm.Actor',
+                name: 'User',
+                threats: [],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  const threats = [
+    {
+      title: 'Threat',
+      type: 'Spoofing',
+      severity: 'High',
+      status: 'Open' as const,
+      description: 'Description',
+      mitigation: 'Mitigation',
+    },
+  ];
+
+  setThreatDragonCellThreats(model.detail.diagrams[0], 'actor-1', threats);
+
+  expect(model.detail.diagrams[0]?.diagramJson?.cells?.[0]?.threats).toStrictEqual(
+    threats,
+  );
+  expect(model.detail.diagrams[0]?.cells?.[0]?.data?.threats).toStrictEqual(
+    threats,
+  );
 });
 
 it('produces valid moves', () => {

@@ -254,6 +254,90 @@ it('download the final model for a game', async () => {
   expect(threats?.[0]?.game).toBe(matchID);
 });
 
+it('download the final model for a Threat Dragon v2.6 style game', async () => {
+  const matchID = '1234568';
+
+  const state = {
+    G: {
+      modelType: ModelType.THREAT_DRAGON,
+      gameMode: GameMode.EOP,
+      identifiedThreats: [
+        {
+          'component-1': {
+            'threat-1': {
+              id: '0',
+              severity: 'High',
+              type: 'D',
+              title: 'title',
+              description: 'description',
+              mitigation: 'mitigation',
+              owner: '0',
+            },
+          },
+        },
+      ],
+    },
+  } as State;
+
+  const metadata: Server.MatchData = {
+    gameName: 'some game',
+    players: {
+      0: { id: 0, name: 'P1', credentials: 'abc123' },
+      1: { id: 1, name: 'P2', credentials: '123abc' },
+    },
+    createdAt: 0,
+    updatedAt: 0,
+  };
+
+  const model: ThreatDragonModel = {
+    version: '2.6.1-RC1',
+    summary: {
+      title: 'Foo',
+    },
+    detail: {
+      diagrams: [
+        {
+          id: 0,
+          title: 'Diagram',
+          thumbnail: '',
+          diagramType: 'STRIDE',
+          cells: [
+            {
+              id: 'component-1',
+              shape: 'actor',
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              zIndex: 1,
+              data: {
+                type: 'tm.Actor',
+                name: 'Actor',
+                threats: [],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  await gameServer.db.setMetadata(matchID, metadata);
+  await gameServer.db.setModel(matchID, model);
+  await gameServer.db.setState(matchID, state);
+
+  const response = await request(publicApiServer.callback())
+    .get(`/game/${matchID}/download`)
+    .auth('0', 'abc123');
+
+  const body = response.body as ThreatDragonModel;
+  const normalizedThreats =
+    body.detail.diagrams[0]?.diagramJson?.cells?.[0]?.threats;
+  const importedThreats = body.detail.diagrams[0]?.cells?.[0]?.data?.threats;
+
+  expect(normalizedThreats?.[0]?.type).toBe('Spoofing');
+  expect(normalizedThreats?.[0]?.game).toBe(matchID);
+  expect(importedThreats?.[0]?.title).toBe('title');
+});
+
 it('Download threat file', async () => {
   const matchID = '1234567';
 

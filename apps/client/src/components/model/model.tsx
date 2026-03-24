@@ -10,6 +10,7 @@ import '../../jointjs/shapes';
 
 import './model.css';
 
+import { getThreatDragonDiagramJson } from '@eop/shared';
 import type { ThreatDragonModel } from '@eop/shared';
 
 const SCROLL_SPEED = 1000;
@@ -62,7 +63,9 @@ const Model: FC<ModelProps> = ({
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    graph.fromJSON(model.detail.diagrams[selectedDiagram]?.diagramJson);
+    graph.fromJSON(
+      getThreatDragonDiagramJson(model.detail.diagrams[selectedDiagram]),
+    );
     //paper.fitToContent(1, 1, 10, { allowNewOrigin: "any" });
   }, [graph, model, selectedDiagram]);
 

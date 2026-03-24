@@ -1,4 +1,8 @@
-import { getComponentName, getSuitDisplayName } from '@eop/shared';
+import {
+  getComponentName,
+  getSuitDisplayName,
+  getThreatDragonCells,
+} from '@eop/shared';
 import {
   faBolt,
   faEdit,
@@ -55,8 +59,9 @@ const Threatbar: FC<ThreatbarProps> = ({
       return undefined;
     }
 
-    const diagram = model.detail.diagrams[G.selectedDiagram]?.diagramJson;
-    return diagram?.cells?.find((cell) => cell.id === G.selectedComponent);
+    return getThreatDragonCells(model.detail.diagrams[G.selectedDiagram]).find(
+      (cell) => cell.id === G.selectedComponent,
+    );
   };
 
   const getThreatsForSelectedComponent = (): ThreatDragonThreat[] => {

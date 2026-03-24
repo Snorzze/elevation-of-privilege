@@ -41,7 +41,7 @@ export interface ThreatDragonModel {
     /**
      * An array of single or multiple threat data-flow diagrams
      */
-    diagrams: Diagram[];
+    diagrams: ThreatDragonDiagram[];
   };
 }
 
@@ -52,7 +52,7 @@ interface Contributor {
   name: string;
 }
 
-interface Diagram {
+export interface ThreatDragonDiagram {
   /**
    * The methodology used by the data-flow diagram
    */
@@ -64,7 +64,7 @@ interface Diagram {
   /**
    * The size of the diagram drawing canvas
    */
-  size: {
+  size?: {
     /**
      * The height of the diagram drawing canvas
      */
@@ -89,7 +89,11 @@ interface Diagram {
   /**
    * The data-flow diagram components
    */
-  diagramJson: DiagramJson;
+  diagramJson?: DiagramJson;
+  /**
+   * The data-flow diagram components in newer Threat Dragon exports
+   */
+  cells?: ImportedThreatDragonCell[];
   /**
    * The highest diagram number in the threat model
    */
@@ -102,13 +106,118 @@ interface Diagram {
    * The highest threat number in the threat model
    */
   threatTop?: number;
+  /**
+   * Optional placeholder/description text used by newer Threat Dragon exports
+   */
+  placeholder?: string;
 }
 
-interface DiagramJson {
+export interface DiagramJson {
   /**
    * The individual diagram components
    */
   cells?: ThreatDragonComponent[];
+}
+
+export interface ImportedThreatDragonCell extends Omit<
+  Partial<ThreatDragonComponent>,
+  'attrs' | 'labels' | 'size' | 'source' | 'target'
+> {
+  /**
+   * The component display attributes
+   */
+  attrs?: ThreatDragonComponent['attrs'];
+  /**
+   * The component raw connector type used for flows and boundaries
+   */
+  connector?: string;
+  /**
+   * Threat Dragon v2.6+ stores many component properties under data
+   */
+  data?: Partial<ThreatDragonComponent> & {
+    name?: string;
+  };
+  /**
+   * The component height if size is not present
+   */
+  height?: number;
+  /**
+   * The component unique identifier (UUID)
+   */
+  id: string;
+  /**
+   * Flow and boundary labels in newer exports can be either strings or full label objects
+   */
+  labels?: Array<string | ThreatDragonLabel>;
+  /**
+   * The component ports used by newer exports
+   */
+  ports?: {
+    groups?: Record<string, unknown>;
+    items?: Array<{
+      group: string;
+      id: string;
+    }>;
+  };
+  /**
+   * The component position
+   */
+  position?: ThreatDragonComponent['position'];
+  /**
+   * The shape identifier used by newer exports
+   */
+  shape?: string;
+  /**
+   * The component size
+   */
+  size?: ThreatDragonComponent['size'];
+  /**
+   * The component source
+   */
+  source?: ThreatDragonTerminus;
+  /**
+   * The component target
+   */
+  target?: ThreatDragonTerminus;
+  /**
+   * The component vertices
+   */
+  vertices?: ThreatDragonComponent['vertices'];
+  /**
+   * Whether the component is visible
+   */
+  visible?: boolean;
+  /**
+   * The component width if size is not present
+   */
+  width?: number;
+  /**
+   * The z-index used by newer exports
+   */
+  zIndex?: number;
+}
+
+export interface ThreatDragonTerminus {
+  /**
+   * The referenced component id in classic exports
+   */
+  id?: string;
+  /**
+   * The referenced component id in newer exports
+   */
+  cell?: string;
+  /**
+   * Optional port id
+   */
+  port?: string;
+  /**
+   * Boundary horizontal coordinate
+   */
+  x?: number;
+  /**
+   * Boundary vertical coordinate
+   */
+  y?: number;
 }
 
 export interface ThreatDragonComponent {
@@ -116,6 +225,13 @@ export interface ThreatDragonComponent {
    * The component display attributes
    */
   attrs: {
+    [selector: string]:
+      | Record<string, unknown>
+      | {
+          class?: string;
+          text?: string;
+        }
+      | undefined;
     /**
      * The component shape attributes
      */
@@ -191,7 +307,7 @@ export interface ThreatDragonComponent {
   /**
    * The floating labels used for boundary or data-flow
    */
-  labels?: Label[];
+  labels?: ThreatDragonLabel[];
   /**
    * The component flag set if it is not in scope
    */
@@ -244,6 +360,10 @@ export interface ThreatDragonComponent {
      */
     id?: string;
     /**
+     * The data-flow source port
+     */
+    port?: string;
+    /**
      * The boundary horizontal curve source
      */
     x?: number;
@@ -268,6 +388,10 @@ export interface ThreatDragonComponent {
      * The data-flow target component
      */
     id?: string;
+    /**
+     * The data-flow target port
+     */
+    port?: string;
     /**
      * The boundary horizontal curve target
      */
@@ -298,7 +422,7 @@ export interface ThreatDragonComponent {
   z: number;
 }
 
-interface Label {
+export interface ThreatDragonLabel {
   /**
    * The label position
    */

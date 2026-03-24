@@ -191,4 +191,71 @@ describe('<Threatbar>', () => {
     expect(threats[0]).toHaveTextContent('Existing Threat 2');
     expect(threats[1]).toHaveTextContent('Existing Threat 1');
   });
+
+  it('shows threats from Threat Dragon v2.6 style diagrams', () => {
+    const model: ThreatDragonModel = {
+      summary: {
+        title: 'title',
+      },
+      detail: {
+        diagrams: [
+          {
+            id: 0,
+            cells: [
+              {
+                id: 'component1',
+                shape: 'actor',
+                position: { x: 0, y: 0 },
+                size: { width: 120, height: 60 },
+                zIndex: 0,
+                data: {
+                  type: 'tm.Actor',
+                  name: 'text',
+                  hasOpenThreats: true,
+                  threats: [
+                    {
+                      title: 'Existing Threat 1',
+                      status: 'Open',
+                      description: '',
+                      mitigation: '',
+                      severity: '',
+                      type: '',
+                    },
+                    {
+                      title: 'Existing Threat 2',
+                      status: 'Open',
+                      description: '',
+                      mitigation: '',
+                      severity: '',
+                      type: '',
+                    },
+                  ],
+                },
+              },
+            ],
+            diagramType: 'STRIDE',
+            thumbnail: '',
+            title: '',
+          },
+        ],
+      },
+    };
+
+    render(
+      <Threatbar
+        G={G}
+        moves={{}}
+        active
+        names={[]}
+        model={model}
+        isInThreatStage={false}
+        playerID={null}
+      />,
+    );
+
+    const threats = screen.getAllByText(/^Existing Threat \d+$/);
+    expect(threats).toHaveLength(2);
+    expect(threats[0]).toHaveTextContent('Existing Threat 2');
+    expect(threats[1]).toHaveTextContent('Existing Threat 1');
+  });
 });
