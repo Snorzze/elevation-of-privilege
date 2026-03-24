@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import * as joint from 'jointjs';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Nav, NavItem, NavLink } from 'reactstrap';
 
 import 'jointjs/dist/joint.css';
@@ -14,11 +14,17 @@ import { getThreatDragonDiagramJson } from '@eop/shared';
 import type { ThreatDragonModel } from '@eop/shared';
 
 const SCROLL_SPEED = 1000;
+const DRAG_THRESHOLD = 8;
+const DESKTOP_ONLY_PAPER_EVENTS = ['touchstart', 'touchstart .joint-link .label'];
+const DESKTOP_ONLY_DOCUMENT_EVENTS = ['touchmove', 'touchend', 'touchcancel'];
+
+let desktopPaperCtor: typeof joint.dia.Paper | null = null;
 
 type ModelProps = {
   model: ThreatDragonModel;
   selectedDiagram: number;
   selectedComponent: string;
+  canSelect: boolean;
   onSelectDiagram?: (id: number) => void;
   onSelectComponent?: (id: string) => void;
 };
@@ -27,6 +33,7 @@ const Model: FC<ModelProps> = ({
   model,
   selectedDiagram,
   selectedComponent,
+  canSelect,
   onSelectDiagram,
   onSelectComponent,
 }) => {
@@ -36,7 +43,7 @@ const Model: FC<ModelProps> = ({
 
   const createPaper = useCallback(
     (el?: HTMLElement) =>
-      new joint.dia.Paper({
+      new (getPaperConstructor())({
         el,
         width: window.innerWidth,
         height: window.innerHeight,
@@ -49,9 +56,12 @@ const Model: FC<ModelProps> = ({
   );
 
   const [paper, setPaper] = useState(createPaper());
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const blankPointerDownRef = useRef<{ x: number; y: number } | null>(null);
 
   const placeholderRef = useCallback(
-    (el: HTMLElement | null) => {
+    (el: HTMLDivElement | null) => {
+      canvasRef.current = el;
       if (el !== null) {
         setPaper(createPaper(el));
       }
@@ -86,28 +96,23 @@ const Model: FC<ModelProps> = ({
   }, [paper, selectedComponent]);
 
   useEffect(() => {
-    const onCellPointerClick = (cellView: joint.dia.CellView) => {
-      if (cellView.model.attributes.type !== 'tm.Boundary') {
-        onSelectComponent?.(cellView.model.id.toString());
-      }
-    };
-
-    const onBlankPointerClick = () => {
-      onSelectComponent?.('');
-    };
-
     const setDragPositionScaled = (x: number, y: number) => {
       const scale = joint.V(paper.layers).scale();
       setDragPosition({ x: x * scale.sx, y: y * scale.sy });
     };
 
+    const onCellPointerDown = (cellView: joint.dia.CellView) => {
+      if (canSelect && cellView.model.attributes.type !== 'tm.Boundary') {
+        onSelectComponent?.(cellView.model.id.toString());
+      }
+    };
+
     const onBlankPointerDown = (
-      event: joint.dia.Event,
+      _event: joint.dia.Event,
       x: number,
       y: number,
     ) => {
-      setDragging(true);
-      setDragPositionScaled(x, y);
+      blankPointerDownRef.current = { x, y };
     };
 
     const stopDragging = (x: number, y: number) => {
@@ -116,35 +121,47 @@ const Model: FC<ModelProps> = ({
     };
 
     const onCellPointerUp = (
-      cellView: joint.dia.CellView,
-      event: joint.dia.Event,
+      _cellView: joint.dia.CellView,
+      _event: joint.dia.Event,
       x: number,
       y: number,
     ) => {
-      stopDragging(x, y);
+      blankPointerDownRef.current = null;
+      if (dragging) {
+        stopDragging(x, y);
+      }
     };
 
-    const onBlankPointerUp = (event: joint.dia.Event, x: number, y: number) => {
-      stopDragging(x, y);
+    const onBlankPointerUp = (
+      _event: joint.dia.Event,
+      x: number,
+      y: number,
+    ) => {
+      blankPointerDownRef.current = null;
+      if (dragging) {
+        stopDragging(x, y);
+        return;
+      }
+      if (canSelect) {
+        onSelectComponent?.('');
+      }
     };
 
-    paper.on('cell:pointerclick', onCellPointerClick);
-    paper.on('blank:pointerclick', onBlankPointerClick);
+    paper.on('cell:pointerdown', onCellPointerDown);
     paper.on('blank:pointerdown', onBlankPointerDown);
     paper.on('cell:pointerup', onCellPointerUp);
     paper.on('blank:pointerup', onBlankPointerUp);
 
     return () => {
-      paper.off('cell:pointerclick', onCellPointerClick);
-      paper.off('blank:pointerclick', onBlankPointerClick);
+      paper.off('cell:pointerdown', onCellPointerDown);
       paper.off('blank:pointerdown', onBlankPointerDown);
       paper.off('cell:pointerup', onCellPointerUp);
       paper.off('blank:pointerup', onBlankPointerUp);
     };
-  }, [paper, onSelectComponent]);
+  }, [canSelect, dragging, paper, onSelectComponent]);
 
   const mouseWheel = useCallback(
-    ({ nativeEvent: e }: React.WheelEvent) => {
+    (e: WheelEvent) => {
       const delta = -e.deltaY / SCROLL_SPEED;
       const newScale = joint.V(paper.layers).scale().sx + delta;
       paper.translate(0, 0);
@@ -154,8 +171,35 @@ const Model: FC<ModelProps> = ({
     [paper],
   );
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    canvas.addEventListener('wheel', mouseWheel, { passive: true });
+    return () => {
+      canvas.removeEventListener('wheel', mouseWheel);
+    };
+  }, [mouseWheel]);
+
   const mouseMove = useCallback(
     ({ nativeEvent: e }: React.MouseEvent) => {
+      const localPoint = offsetToLocalPoint(e.offsetX, e.offsetY, paper);
+      const pressedPointer = blankPointerDownRef.current;
+      if (
+        !dragging &&
+        pressedPointer &&
+        Math.hypot(
+          pressedPointer.x - localPoint.x,
+          pressedPointer.y - localPoint.y,
+        ) >= DRAG_THRESHOLD
+      ) {
+        setDragging(true);
+        setDragPosition({ x: e.offsetX, y: e.offsetY });
+        return;
+      }
+
       if (dragging) {
         const x = e.offsetX;
         const y = e.offsetY;
@@ -177,7 +221,11 @@ const Model: FC<ModelProps> = ({
                 className={classnames({
                   active: selectedDiagram === idx,
                 })}
-                onClick={() => onSelectDiagram?.(idx)}
+                onClick={() => {
+                  if (canSelect) {
+                    onSelectDiagram?.(idx);
+                  }
+                }}
               >
                 {d.title}
               </NavLink>
@@ -186,10 +234,9 @@ const Model: FC<ModelProps> = ({
         </Nav>
       </div>
       <div
-        className="placeholder"
+        className="diagram-canvas"
         ref={placeholderRef}
         onMouseMove={mouseMove}
-        onWheel={mouseWheel}
       />
     </div>
   );
@@ -211,3 +258,51 @@ const offsetToLocalPoint = (
   );
   return offsetTransformed;
 };
+
+function getPaperConstructor(): typeof joint.dia.Paper {
+  if (supportsTouch()) {
+    return joint.dia.Paper;
+  }
+
+  if (desktopPaperCtor) {
+    return desktopPaperCtor;
+  }
+
+  const paperClass = joint.dia.Paper as typeof joint.dia.Paper & {
+    extend: (definition: object) => typeof joint.dia.Paper;
+  };
+  const prototypeWithEvents = joint.dia.Paper.prototype as typeof joint.dia.Paper.prototype & {
+    events: Record<string, string>;
+    documentEvents: Record<string, string>;
+  };
+
+  const paperCtor = paperClass.extend({
+    events: omitJointEvents(prototypeWithEvents.events, [
+      'wheel',
+      ...DESKTOP_ONLY_PAPER_EVENTS,
+    ]),
+    documentEvents: omitJointEvents(
+      prototypeWithEvents.documentEvents,
+      DESKTOP_ONLY_DOCUMENT_EVENTS,
+    ),
+  });
+
+  desktopPaperCtor = paperCtor;
+
+  return paperCtor;
+}
+
+function supportsTouch(): boolean {
+  return typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0;
+}
+
+function omitJointEvents(
+  events: Record<string, string>,
+  namesToOmit: string[],
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(events).filter(
+      ([eventName]) => !namesToOmit.includes(eventName),
+    ),
+  );
+}

@@ -141,6 +141,7 @@ const Board: FC<BoardProps> = ({
           model={model}
           selectedDiagram={G.selectedDiagram}
           selectedComponent={G.selectedComponent}
+          canSelect={active}
           onSelectDiagram={moves.selectDiagram}
           onSelectComponent={moves.selectComponent}
         />

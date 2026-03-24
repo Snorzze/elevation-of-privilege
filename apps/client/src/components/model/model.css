@@ -1,0 +1,14 @@
+.diagram-canvas {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 8.5rem);
+  min-height: 32rem;
+  overflow: hidden;
+  background: transparent;
+  cursor: default;
+}
+
+.diagram-canvas .joint-paper {
+  width: 100%;
+  height: 100%;
+}
