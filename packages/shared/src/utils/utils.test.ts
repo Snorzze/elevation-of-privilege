@@ -210,6 +210,53 @@ it('normalizes Threat Dragon v2.6 diagrams to classic diagramJson cells', () => 
   });
 });
 
+it('normalizes Threat Dragon boundary aliases to supported JointJS types', () => {
+  const model = {
+    version: '2.6.1-RC1',
+    summary: {
+      title: 'Foo',
+    },
+    detail: {
+      diagrams: [
+        {
+          id: 0,
+          title: 'Diagram',
+          thumbnail: '',
+          diagramType: 'STRIDE',
+          cells: [
+            {
+              id: 'boundary-1',
+              shape: 'trust-boundary-box',
+              position: { x: 10, y: 20 },
+              size: { width: 300, height: 150 },
+              zIndex: -1,
+              attrs: {
+                label: {
+                  text: 'Business IT',
+                },
+              },
+              data: {
+                type: 'tm.BoundaryBox',
+                name: 'Business IT',
+                isTrustBoundary: true,
+                hasOpenThreats: false,
+              },
+            },
+          ],
+        },
+      ],
+    },
+  } as ThreatDragonModel;
+
+  const [boundary] = getThreatDragonDiagramJson(model.detail.diagrams[0]).cells ?? [];
+
+  expect(boundary?.type).toBe('tm.Boundary');
+  expect(boundary?.labels?.[0]?.attrs.text.text).toBe('Business IT');
+  expect(boundary?.attrs['.connection']).toStrictEqual({
+    class: 'connection hasNoOpenThreats isInScope',
+  });
+});
+
 it('syncs imported cell threats when updating normalized diagrams', () => {
   const model: ThreatDragonModel = {
     summary: {

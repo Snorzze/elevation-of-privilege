@@ -27,6 +27,16 @@ const SHAPE_TO_TYPE: Record<string, ThreatDragonComponent['type']> = {
   'trust-boundary-curve': 'tm.Boundary',
 };
 
+const TYPE_ALIASES: Record<string, ThreatDragonComponent['type']> = {
+  'tm.Actor': 'tm.Actor',
+  'tm.Boundary': 'tm.Boundary',
+  'tm.BoundaryBox': 'tm.Boundary',
+  'tm.BoundaryCurve': 'tm.Boundary',
+  'tm.Flow': 'tm.Flow',
+  'tm.Process': 'tm.Process',
+  'tm.Store': 'tm.Store',
+};
+
 export function getDealtCard(G: GameState): string {
   if (G.dealt.length > 0 && G.dealtBy) {
     return G.dealt[Number.parseInt(G.dealtBy)] ?? '';
@@ -252,7 +262,31 @@ function normalizeThreatDragonCell(
 function resolveThreatDragonCellType(
   cell: ImportedThreatDragonCell,
 ): ThreatDragonComponent['type'] {
-  return cell.type ?? cell.data?.type ?? SHAPE_TO_TYPE[cell.shape ?? ''] ?? 'tm.Actor';
+  const explicitType = normalizeThreatDragonCellType(
+    cell.type as string | undefined,
+  );
+  if (explicitType) {
+    return explicitType;
+  }
+
+  const dataType = normalizeThreatDragonCellType(
+    cell.data?.type as string | undefined,
+  );
+  if (dataType) {
+    return dataType;
+  }
+
+  return SHAPE_TO_TYPE[cell.shape ?? ''] ?? 'tm.Actor';
+}
+
+function normalizeThreatDragonCellType(
+  type: string | undefined,
+): ThreatDragonComponent['type'] | undefined {
+  if (!type) {
+    return undefined;
+  }
+
+  return TYPE_ALIASES[type];
 }
 
 function normalizeThreatDragonAttrs(
