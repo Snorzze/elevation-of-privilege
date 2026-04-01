@@ -28,6 +28,7 @@
   position: fixed;
   bottom: 0;
   border-top: 4px double #ccc;
+  box-sizing: border-box;
 
   background-image:
     radial-gradient(#ccc 20%, transparent 20%),
@@ -37,16 +38,16 @@
     0 0,
     50px 50px;
   background-size: 100px 100px;
-  padding-left: 20px;
 
   width: 100%;
 }
 
 .playingCards {
-  display: table;
+  display: block;
   width: 100%;
-  padding-top: 20px;
-  height: 250px;
+  box-sizing: border-box;
+  padding: 20px 20px 0;
+  overflow: visible;
 }
 
 .playingCards:after {
@@ -89,6 +90,44 @@
   margin: 0 0 1.5em 0;
   position: relative;
 }
+
+.playingCards .handViewport {
+  position: relative;
+  height: 250px;
+  overflow: visible;
+  touch-action: pan-x;
+}
+
+.playingCards .handScrollbar {
+  margin: 0 -20px;
+  width: calc(100% + 40px);
+  height: 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 90, 90, 0.8) rgba(0, 0, 0, 0.08);
+  background: transparent;
+}
+
+.playingCards .handScrollbarSpacer {
+  height: 1px;
+}
+
+.playingCards .handScrollbar::-webkit-scrollbar {
+  height: 12px;
+}
+
+.playingCards .handScrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.playingCards .handScrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(90, 90, 90, 0.8);
+  background-clip: padding-box;
+}
+
 .playingCards ul.table li,
 .playingCards ul.hand li,
 .playingCards ul.deck li {
@@ -102,6 +141,10 @@
 .playingCards ul.deck li {
   position: absolute;
   display: inline-block;
+}
+
+.playingCards ul.hand li {
+  overflow: visible;
 }
 
 .playingCards ul.hand li:nth-child(1) {

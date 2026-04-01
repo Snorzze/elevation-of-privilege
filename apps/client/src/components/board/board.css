@@ -6,7 +6,7 @@
 
 .status-bar {
   border-bottom: 1px solid #ccc;
-  padding: 5px;
+  padding: 5px 20px;
 }
 
 .timer-wrapper {
@@ -24,12 +24,19 @@
   z-index: 1;
 }
 
-.board-footer {
-  position: fixed;
-  left: 1rem;
-  bottom: 0;
-  width: 6rem;
+.playing-cards-footer {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
+  gap: 1rem;
+  box-sizing: border-box;
+  padding: 0.35rem 0.75rem 0.15rem;
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.board-footer {
+  display: flex;
+  gap: 0.75rem;
   font-size: 70%;
 }

@@ -175,12 +175,14 @@ const Board: FC<BoardProps> = ({
               gameMode={G.gameMode}
             />
           )}
+          <div className="playing-cards-footer">
+            <div className="board-footer">
+              <Imprint />
+              <Privacy />
+            </div>
+            <LicenseAttribution gameMode={G.gameMode} />
+          </div>
         </div>
-        <div className="board-footer">
-          <Imprint />
-          <Privacy />
-        </div>
-        <LicenseAttribution gameMode={G.gameMode} />
       </div>
       <Sidebar
         G={G}
