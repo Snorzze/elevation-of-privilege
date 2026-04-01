@@ -102,7 +102,11 @@ const Model: FC<ModelProps> = ({
     };
 
     const onCellPointerDown = (cellView: joint.dia.CellView) => {
-      if (canSelect && cellView.model.attributes.type !== 'tm.Boundary') {
+      if (
+        canSelect &&
+        cellView.model.attributes.type !== 'tm.Boundary' &&
+        cellView.model.attributes.type !== 'tm.BoundaryBox'
+      ) {
         onSelectComponent?.(cellView.model.id.toString());
       }
     };

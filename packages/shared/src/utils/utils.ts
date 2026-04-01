@@ -23,14 +23,14 @@ const SHAPE_TO_TYPE: Record<string, ThreatDragonComponent['type']> = {
   flow: 'tm.Flow',
   process: 'tm.Process',
   store: 'tm.Store',
-  'trust-boundary-box': 'tm.Boundary',
+  'trust-boundary-box': 'tm.BoundaryBox',
   'trust-boundary-curve': 'tm.Boundary',
 };
 
 const TYPE_ALIASES: Record<string, ThreatDragonComponent['type']> = {
   'tm.Actor': 'tm.Actor',
   'tm.Boundary': 'tm.Boundary',
-  'tm.BoundaryBox': 'tm.Boundary',
+  'tm.BoundaryBox': 'tm.BoundaryBox',
   'tm.BoundaryCurve': 'tm.Boundary',
   'tm.Flow': 'tm.Flow',
   'tm.Process': 'tm.Process',
@@ -81,7 +81,7 @@ export function getComponentName(
 ): string {
   if (component === undefined) return '';
 
-  const prefix = component.type.slice(3);
+  const prefix = component.type === 'tm.BoundaryBox' ? 'Boundary' : component.type.slice(3);
 
   if (component.type === 'tm.Flow') {
     return `${prefix}: ${component.labels?.[0]?.attrs.text.text}`;
@@ -302,6 +302,24 @@ function normalizeThreatDragonAttrs(
       },
       '.marker-target': {
         class: `marker-target ${formatThreatStateClasses(hasOpenThreats, outOfScope)}`,
+      },
+    };
+  }
+
+  if (type === 'tm.BoundaryBox') {
+    return {
+      '.element-shape': {
+        class: `element-shape ${formatThreatStateClasses(hasOpenThreats, outOfScope)}`,
+      },
+      '.element-text': {
+        class: `element-text ${formatThreatStateClasses(hasOpenThreats, outOfScope)}`,
+      },
+      text: {
+        text:
+          cell.attrs?.text?.text ??
+          (cell.attrs?.label as { text?: string } | undefined)?.text ??
+          cell.data?.name ??
+          '',
       },
     };
   }

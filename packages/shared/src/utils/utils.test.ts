@@ -250,10 +250,10 @@ it('normalizes Threat Dragon boundary aliases to supported JointJS types', () =>
 
   const [boundary] = getThreatDragonDiagramJson(model.detail.diagrams[0]).cells ?? [];
 
-  expect(boundary?.type).toBe('tm.Boundary');
-  expect(boundary?.labels?.[0]?.attrs.text.text).toBe('Business IT');
-  expect(boundary?.attrs['.connection']).toStrictEqual({
-    class: 'connection hasNoOpenThreats isInScope',
+  expect(boundary?.type).toBe('tm.BoundaryBox');
+  expect(boundary?.attrs.text?.text).toBe('Business IT');
+  expect(boundary?.attrs['.element-shape']).toStrictEqual({
+    class: 'element-shape hasNoOpenThreats isInScope',
   });
 });
 

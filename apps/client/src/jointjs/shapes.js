@@ -122,6 +122,44 @@ const Boundary = dia.Link.extend({
   ),
 });
 
+const BoundaryBox = shapes.basic.Generic.extend({
+  markup:
+    '<g class="rotatable"><g class="scalable"><rect class="element-shape hasNoOpenThreats isInScope"/><title class="tooltip"/></g><text class="element-text hasNoOpenThreats isInScope"/></g>',
+
+  defaults: util.defaultsDeep(
+    {
+      type: 'tm.BoundaryBox',
+      attrs: {
+        '.element-shape': {
+          fill: 'none',
+          stroke: 'green',
+          'stroke-width': 3,
+          'stroke-dasharray': '10,5',
+          'follow-scale': true,
+          width: 160,
+          height: 80,
+        },
+        text: { ref: '.element-shape' },
+      },
+      size: { width: 160, height: 80 },
+    },
+    shapes.basic.Generic.prototype.defaults,
+  ),
+});
+
+Object.defineProperty(BoundaryBox.prototype, 'name', {
+  get: function () {
+    return wordUnwrap(this.attr('text/text'));
+  },
+  set: function (value) {
+    editNameElement(this, value);
+  },
+});
+
+defineProperties(BoundaryBox.prototype, ['reasonOutOfScope', 'threats']);
+defineOutOfScope(BoundaryBox.prototype, 'element-shape');
+defineHasOpenThreats(BoundaryBox.prototype, ['element-shape', 'element-text']);
+
 //element with tool bar
 
 const toolElement = shapes.basic.Generic.extend({
@@ -358,10 +396,20 @@ const FlowView = LinkView;
 
 const BoundaryView = LinkView;
 
+const BoundaryBoxView = dia.ElementView.extend({
+  setSelected: function () {
+    this.highlight(null, Highlighter);
+  },
+  setUnselected: function () {
+    this.unhighlight(null, Highlighter);
+  },
+});
+
 const tm = {
   Highlighter,
   Flow,
   Boundary,
+  BoundaryBox,
   toolElement,
   Process,
   Store,
@@ -373,6 +421,7 @@ const tm = {
   LinkView,
   FlowView,
   BoundaryView,
+  BoundaryBoxView,
 };
 
 Object.assign(shapes, { tm });
